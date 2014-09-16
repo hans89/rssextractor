@@ -1,41 +1,49 @@
-var rssJSON = './rsslinks.json';
-
-var fs = require('fs');
-var rssSites = JSON.parse(fs.readFileSync(rssJSON));
-var request = require('request');
-var xml2js = require('xml2js');
-var parser = new xml2js.Parser();
-var async = require('async');
-var Sequelize = require('sequelize');
-
-var db = new Sequelize(null, null, null, {
-		dialect : 'sqlite',
-		storage : './db.sqlite'
-});
+var fs = require('fs')
+	, request = require('request')
+	, xml2js = require('xml2js')
+	, async = require('async')
+	, db = require('./database.js')
+	;
 
 var limit = 5;
+var rssJSON = './rsslinks.json';
+var rssSites = JSON.parse(fs.readFileSync(rssJSON));
+var parser = new xml2js.Parser();
 
-var News = db.define('news', {
-	title : Sequelize.TEXT,
-	link : Sequelize.TEXT,
-	guid : Sequelize.STRING,
-	pubDate : Sequelize.DATE
-});
+db.sql.sync().done(function(){
 
-var Categories = db.define('categories', {
-	title : Sequelize.STRING
-});
+	async.eachSeries(rssSites, function(site, done) {
+		db.Site.findOrCreate({
+			name : site.name,
+			lastUpdate : new Date(site.last_update)
+	  	}).success(function(newSite, created){
 
-var Sites = db.define('sites', {
-	name : Sequelize.STRING,
-	lastUpdate : Sequelize.DATE
-});
+	  		if (created == true) {
+	  			async.eachSeries(site.rss, function(rssCat, doneRSS) {	
+	  				db.Category.findOrCreate({
+	  						title : rssCat.category,
+	  						link : rssCat.link
+						}).success(function(catgry) {
+							newSite.addCategory(catgry);
+							doneRSS();
+						});
 
-Sites.hasMany(Categories, {as : 'cats'});
-Categories.hasMany(News, {as : 'news'});
+	  			}, function(err) {
+					if (err)
+						console.log(err);
+					// finally save the site
+					newSite.save();
+				});
+	  		}
+	  		// run each site in parallel
+	  		done();
+		});        
+	}, function(err) {
+		if (err)
+			console.log(err);	
+	});
+	
 
-db.sync().done(function(){
-	var outStream = fs.createWriteStream('test.rss');
 	async.eachSeries(rssSites, function(site, doneSite) {
 		async.eachLimit(site.rss, limit, function(rss, doneRSS) {
 			request(rss.link, function (error, response, body) {
@@ -53,10 +61,10 @@ db.sync().done(function(){
 
 											for (var h = 0; h < items.length; h++) {
 												var item = items[h];
-												console.log(item.title[0], item.pubDate);
+												// console.log(item.title[0], item.pubDate);
 
-												if (item.pubDate == undefined)
-													console.error("pubDate undefined", rss.link);
+												// if (item.pubDate == undefined)
+												// 	console.error("pubDate undefined", rss.link);
 											}
 										}
 									}
