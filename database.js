@@ -12,9 +12,9 @@ var logger = function(content) {
 };
 
 var db = new Sequelize(null, null, null, {
-		dialect : 'sqlite',
-		storage : './db.sqlite',
-		logging : logger
+	dialect : 'sqlite'
+	, storage : './db.sqlite'
+	//, logging : logger
 });
 
 var News = db.define('News', {

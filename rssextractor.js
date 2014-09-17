@@ -6,7 +6,8 @@ var fs = require('fs')
 	;
 
 var limit = 5;
-var interval = 2*3600*1000;
+var hourInterval = 2;
+var interval = hourInterval*3600*1000;
 var rssJSON = './rsslinks.json';
 var rssSites = JSON.parse(fs.readFileSync(rssJSON));
 var parser = new xml2js.Parser();
@@ -18,7 +19,7 @@ db.sql.sync().done(function(){
 
 			console.log("====RUN====", time);
 
-			db.logStream = fs.createWriteStream('test/' + time.toString() + '.log');
+			//db.logStream = fs.createWriteStream('test/' + time.toString() + '.log');
 			async.series([
 				function(done) {
 					db.init(rssSites, done);		
@@ -71,8 +72,8 @@ db.sql.sync().done(function(){
 					}).error(done);
 				}
 			], function (err, results) { 
-				db.logStream.end();
-				console.log("====DONE====", new Date());
+				//db.logStream.end();
+				console.log("====DONE====", new Date(), "Next run in", hourInterval, "hour(s).");
 				setTimeout(next, interval);
 			});
 		},
