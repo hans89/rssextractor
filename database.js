@@ -35,7 +35,9 @@ var Site = db.define('Site', {
 });
 
 Site.hasMany(Category);
+Category.belongsTo(Site);
 Category.hasMany(News);
+News.belongsTo(Category);
 
 var database = {
 	sql : db,
