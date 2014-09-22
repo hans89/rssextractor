@@ -7,28 +7,35 @@ var fs = require('fs')
 
 var requestTimeout = 10*1000;
 var limit = 5;
+<<<<<<< HEAD
 var hourInterval = 1;
 var interval = hourInterval*3600*1000;
+=======
+var requestTimeout = 1*1000;
+var hourInterval = 2;
+var interval = 1000;
+>>>>>>> 9a807c5b04edd028cb8fd15520eb53592832667d
 var rssJSON = './rsslinks.json';
 var rssSites = JSON.parse(fs.readFileSync(rssJSON));
 var parser = new xml2js.Parser();
 
 db.sql.sync().done(function(){
-	db.init(rssSites, function() {
+	db.init(rssSites, function(){
 		async.forever(
 			function(next) {
+
+				var parseDone = function (err) { 
+					//db.logStream.end();
+					console.log("====DONE====", new Date(), "Next run in", hourInterval, "hour(s).");
+					if (err) {
+						console.log("ERROR3", err);
+					}
+					setTimeout(next, interval);
+				}
+
 				var time = new Date();
 
 				console.log("====RUN====", time);
-
-				var iterationDone = function(err) { 
-					//db.logStream.end();
-					if (err)
-						console.log('====ERROR4====', err);
-					console.log("====DONE====", new Date(), "Next run in", hourInterval, "hour(s).");
-
-					setTimeout(next, interval);
-				};
 
 				db.Category
 					.findAll()
@@ -72,12 +79,14 @@ db.sql.sync().done(function(){
 										}
 									});
 								} else {
-									console.log("ERROR3", rssCat.link);
+									if (error) {
+										console.log("ERROR2", error);
+									}
 									doneRSS();
 								}
 							});	
-						}, iterationDone);
-					}).error(iterationDone);
+					}, parseDone);
+				}).error(parseDone);
 			},
 			function (err) {
 				console.log("====FOREVER_ERROR====", err);
