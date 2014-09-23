@@ -6,15 +6,10 @@ var fs = require('fs')
 	;
 
 var requestTimeout = 10*1000;
-var limit = 5;
-<<<<<<< HEAD
+var limit = 3;
 var hourInterval = 1;
 var interval = hourInterval*3600*1000;
-=======
-var requestTimeout = 1*1000;
-var hourInterval = 2;
-var interval = 1000;
->>>>>>> 9a807c5b04edd028cb8fd15520eb53592832667d
+
 var rssJSON = './rsslinks.json';
 var rssSites = JSON.parse(fs.readFileSync(rssJSON));
 var parser = new xml2js.Parser();
