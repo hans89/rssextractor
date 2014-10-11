@@ -1,9 +1,12 @@
 var fs = require('fs');
+var _ = require('underscore');
 
-var file = fs.readFileSync('title-out.csv', 'utf-8');
+var args = process.argv.slice(2);
+
+var file = fs.readFileSync(args[0], 'utf-8');
 var lines = file.split('\n');
 
-var cmp = require('./jaccard');
+var cmp = args[1] == 'dice' ? require('./dice') : require('./jaccard');
 
 var stopwords = ["bị", "bởi", "cả", "các", "cái", "cần", "càng", "chỉ", "chiếc", "cho", "chứ", "chưa", "chuyện", "có", "có_thể", "cứ", "của", "cùng", "cũng", "đã", "đang", "đây", "để", "đến_nỗi", "đều", "điều", "do", "đó", "được", "dưới", "gì", "khi", "không", "là", "lại", "lên", "lúc", "mà", "mỗi", "một_cách", "này", "nên", "nếu", "ngay", "nhiều", "như", "nhưng", "những", "nơi", "nữa", "phải", "qua", "ra", "rằng", "rằng", "rất", "rất", "rồi", "sau", "sẽ", "so", "sự", "tại", "theo", "thì", "trên", "trước", "từ", "từng", "và", "vẫn", "vào", "vậy", "vì", "việc", "với", "vừa", "!", "\"", "#", "$", "%", "&", "'", "(", ")", "-", "=", "^", "~", "|", "[", "]", "{", "}", ",", ".", "<", ">", "/", "?", "_", "\\", ";", ":", "+", "*"];
 
@@ -11,7 +14,7 @@ var hashMap = {};
 var count = 0;
 
 var parse = function(line) {
-	var pattern = /(\d+) ?, ?(.+)/;
+	var pattern = /(\d+) ?; ?(.+)/;
 	var result = line.match(pattern);
 	if (result)
 		return { 
@@ -30,6 +33,9 @@ var hashSentence = function(sentence, hashFunc) {
 			sentence.hashArray.push(hashFunc(sentence.title[i]));	
 		}
 	}
+
+	sentence.uniqHashArray = _.uniq(sentence.hashArray);
+	// console.log(sentence.id, sentence.hashArray, sentence.uniqHashArray);
 }
 
 var sentences = [];
@@ -40,7 +46,8 @@ for (var i = 0; i < lines.length; i++) {
 		for (var j = 0; j < sen.title.length; j++) {
 			var word = sen.title[j];
 
-			if (!hashMap[word] && stopwords.indexOf(word) == -1) {
+			// mark words
+			if (hashMap[word] == undefined && stopwords.indexOf(word) == -1) {
 				hashMap[word] = count++;
 			}
 		}
@@ -62,9 +69,9 @@ for (var i = 0; i < max - 1; i++) {
 	var sen1 = sentences[i];
 	for (var j = i+1; j < max; j++) {
 		var sen2 = sentences[j];
-		var sim = cmp(sen1.hashArray, sen2.hashArray);
+		var sim = cmp(sen1.uniqHashArray, sen2.uniqHashArray);
 
-		if (sim > threshold)
+		//if (sim > threshold)
 			console.log(sen1.id, sen2.id, sim);
 	}	
 }
