@@ -71,7 +71,7 @@ for (var i = 0; i < max - 1; i++) {
 		var sen2 = sentences[j];
 		var sim = cmp(sen1.uniqHashArray, sen2.uniqHashArray);
 
-		//if (sim > threshold)
+		if (sim > threshold)
 			console.log(sen1.id, sen2.id, sim);
 	}	
 }
